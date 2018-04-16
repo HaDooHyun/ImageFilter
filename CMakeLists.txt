@@ -1,0 +1,41 @@
+PROJECT(ImageFilter)
+SET(CMAKE_CXX_FLAGS "-std=gnu++14 ${CMAKE_CXX_FLAGS}")
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+AUX_SOURCE_DIRECTORY(. SRC_LIST)
+
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
+LINK_DIRECTORIES(${CMAKE_SOURCE_DIR})
+
+FIND_PACKAGE(wxWidgets COMPONENTS core base REQUIRED)
+IF(wxWidgets_FOUND)
+    INCLUDE(${wxWidgets_USE_FILE})
+    MESSAGE("wxWidgets Found!!")
+ELSE(wxWidgets_FOUND)
+    MESSAGE("wxWidgets not found!!!!!!!!!")
+ENDIF(wxWidgets_FOUND)
+
+FIND_PACKAGE(CUDA REQUIRED)
+if(CUDA_FOUND)
+    MESSAGE("cuda found!")
+    INCLUDE(FindCUDA)
+ELSE(CUDA_FOUND)
+    MESSAGE("cuda not found!")
+ENDIF(CUDA_FOUND)
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+SET(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+SET(CUDA_PROPAGATE_HOST_FLAGS ON)
+
+LIST(APPEND CUDA_NVCC_FLAGS --compiler-options -fno-strict-aliasing -lineinfo -use_fast_math -Xptxas -dlcm=cg)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_20,code=sm_20)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
+LIST(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_35,code=sm_35)
+
+SET(SRC_BASE main.cpp ImageFilter.cpp ImageFilter.hpp ImageFilterApp.hpp ImageFilterApp.cpp)
+SET(SRC_CUDA CudaHelper/ImageConverter.cu)
+
+ADD_EXECUTABLE(ImageFilter ${SRC_BASE})
+CUDA_ADD_EXECUTABLE(CudaHelper ${SRC_CUDA})
+#${SRC_Components} ${SRC_DATA} ${SRC_Detection})
+TARGET_LINK_LIBRARIES(ImageFilter ${wxWidgets_LIBRARIES})
+
